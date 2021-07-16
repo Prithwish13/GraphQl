@@ -1,0 +1,68 @@
+type Query {
+  company(id: ID): Company
+  jobs(pagination: PaginationOption): JobPagination
+}
+
+type Mutation {
+  createUser(userInput: UserInputData): User!
+  createCompany(companyInput: CompanyInputData): Company!
+  createJob(jobInput: JobInputData): Job!
+  login(loginInput: LoginData): String
+}
+
+input PaginationOption {
+  page: Int
+  limit: Int
+}
+
+type Company {
+  _id: ID!
+  name: String
+  description: String
+  jobs: [Job]
+}
+type Job {
+  _id: ID!
+  title: String
+  company: Company
+  description: String
+}
+
+type JobPagination {
+  total: Int
+  limit: Int
+  page: Int
+  pages: Int
+  item: [Job]
+}
+
+input LoginData {
+  email: String!
+  password: String!
+}
+
+input CompanyInputData {
+  name: String!
+  description: String!
+}
+
+input JobInputData {
+  title: String!
+  description: String!
+}
+
+type User {
+  _id: ID!
+  name: String!
+  email: String!
+  password: String
+  status: String!
+  companyId: String!
+}
+
+input UserInputData {
+  email: String!
+  name: String!
+  password: String!
+  companyId: String!
+}
