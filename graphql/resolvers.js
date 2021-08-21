@@ -1,17 +1,16 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const Company = require("../models/company");
-const Job = require("../models/job");
+const company = require("../models/company");
+const job = require("../models/job");
 const {
   UserInputError,
   AuthenticationError,
 } = require("apollo-server-express");
-const job = require("../models/job");
 
 const Query = {
   company: async (root, args) => {
-    const companyData = await Company.findOne({ _id: args.id }).lean().exec();
+    const companyData = await company.findOne({ _id: args.id }).lean().exec();
     return companyData;
   },
 
@@ -31,7 +30,7 @@ const Query = {
       return {
         ...job,
         company: job.companyId,
-        comapanyId: null,
+        companyId: null,
       };
     });
     delete jobs.docs;
@@ -42,8 +41,23 @@ const Query = {
   },
 };
 
+const Company = {
+  jobs : async (company) => {
+    const jobs =  await job.find({companyId: company._id});
+    return jobs;
+  }
+}
+
+const Job = {
+  company : async (job) => {
+    const findCompany =  company.findOne({_id: job.companyId})
+    return findCompany
+  }
+}
+
+
 const Mutation = {
-  createUser: async function (root, { userInput }, contex) {
+  createUser: async function (root, { userInput }, context) {
     console.log(userInput);
     const existingUser = await User.findOne({ email: userInput.email });
     if (existingUser) {
@@ -64,7 +78,7 @@ const Mutation = {
   },
 
   createCompany: async function (root, { companyInput }, contex) {
-    const existingCompany = await Company.findOne({ name: companyInput.name });
+    const existingCompany = await company.findOne({ name: companyInput.name });
     if (existingCompany) {
       throw new UserInputError("Company name already exists");
     }
@@ -74,7 +88,7 @@ const Mutation = {
     };
     console.log(companyData);
     try {
-      const createdCompany = await Company.create(companyData);
+      const createdCompany = await company.create(companyData);
       console.log(createdCompany);
       return {
         ...createdCompany._doc,
@@ -87,7 +101,9 @@ const Mutation = {
 
   login: async (root, { loginInput }) => {
     const { email, password } = loginInput;
+
     const user = await User.findOne({ email }).lean().exec();
+    console.log(email)
     if (!user) {
       throw new UserInputError("No user with that email");
     }
@@ -95,9 +111,9 @@ const Mutation = {
     if (!valid) {
       throw new AuthenticationError("Incorrect password");
     }
-    return jwt.sign({ _id: user._id, email: user.email }, "misterj", {
+    return `Bearer ${jwt.sign({ _id: user._id, email: user.email }, "misterj", {
       expiresIn: "1d",
-    });
+    })}`;
   },
 
   createJob: async (root, { jobInput }, { user }) => {
@@ -111,7 +127,7 @@ const Mutation = {
         description: jobInput.description,
         companyId: user.companyId,
       };
-      const createdJob = await Job.create(jobObject);
+      const createdJob = await job.create(jobObject);
       return {
         ...createdJob._doc,
         _id: createdJob._id.toString(),
@@ -124,5 +140,7 @@ const Mutation = {
 
 module.exports = {
   Mutation,
+  Company,
+  Job,
   Query,
 };
