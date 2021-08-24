@@ -39,6 +39,11 @@ const Query = {
       ...jobs,
     };
   },
+
+  companies: async (root) => {
+    const allCompanies = await company.find().lean().exec()
+    return allCompanies
+  }
 };
 
 const Company = {

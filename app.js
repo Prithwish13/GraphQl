@@ -23,6 +23,18 @@ mongoose
       
     })
     .catch((err) => console.log(err));
+
+    const context = async ({ req }) => {
+      try {
+        console.log(req.user)
+        const user = await User.findOne({ _id: req.user? req.user._id: null }).lean().exec();
+        return {
+          user: user ? user : null,
+        };
+      } catch (error) {
+        throw new Error(error);
+      }
+    };    
    
 async function startServer (){
   
@@ -79,17 +91,7 @@ async function startServer (){
   });
   app.use(bodyParser.json(), auth);
   
-  const context = async ({ req }) => {
-    try {
-      console.log(req.user)
-      const user = await User.findOne({ _id: req.user? req.user._id: null }).lean().exec();
-      return {
-        user: user ? user : null,
-      };
-    } catch (error) {
-      throw new Error(error);
-    }
-  };
+  
   const schema =  makeExecutableSchema({
     typeDefs: graphqlSchema,
     resolvers: graphqlResolver,

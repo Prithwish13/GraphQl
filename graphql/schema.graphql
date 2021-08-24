@@ -1,6 +1,7 @@
 type Query {
   company(id: ID): Company
   jobs(pagination: PaginationOption): JobPagination
+  companies: [Company]
 }
 
 type Mutation {
